@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && cp src/components/*.css dist/components && rm -rf dist/stories",
+    "build": "tsc && cp src/components/*.css dist/components && rm -rf dist/stories && rm -rf dist/src",
     "lint": "eslint \"{**/*,*}.{js,ts,jsx,tsx}\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
