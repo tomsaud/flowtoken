@@ -9,7 +9,7 @@ interface RandomTextSenderProps {
     windowSize: number;  // Propagate this to SmoothText for consistency
     animation?: string;  // Animation name
     sep?: string;  // Token separator
-    regexComponents: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
+    customComponents: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
 }
 
 interface Controls {
@@ -104,7 +104,7 @@ const Controls = ({ controls, setControls }: { controls: Controls, setControls: 
     );
 }
 
-const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, regexComponents }) => {
+const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, customComponents, htmlComponents }) => {
     const [currentText, setCurrentText] = useState('');
     const [remainingTokens, setRemainingTokens] = useState<string[]>([]);
     const [baseLatency, setBaseLatency] = useState<number>(10);
@@ -116,7 +116,7 @@ const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, regexC
         delayMultiplier: 1.4,
         animationDuration: 0.6,
         animationTimingFunction: "ease-in-out",
-        generationSpeed: 30,
+        generationSpeed: 3,
         simulateNetworkIssue: false
     });
     const [slowSection, setSlowSection] = useState<boolean>(false);
@@ -184,7 +184,7 @@ const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, regexC
             </div>
             <div className="text-sm w-1/2 prose lg:prose-md prose-pre:p-0 prose-pre:m-0 prose-pre:bg-transparent" style={{ height: '3000px'}}>
                 {currentText.length > 0 &&
-                    <AnimatedMarkdown content={currentText} animation={controls.animation === 'none' ? null : controls.animation} sep={controls.sep} animationDuration={animationDurationString} animationTimingFunction={controls.animationTimingFunction} regexComponents={regexComponents} />   
+                    <AnimatedMarkdown content={currentText} animation={controls.animation === 'none' ? null : controls.animation} sep={controls.sep} animationDuration={animationDurationString} animationTimingFunction={controls.animationTimingFunction} customComponents={customComponents} htmlComponents={htmlComponents}/>   
                 }
             </div>
         </div>
@@ -246,13 +246,13 @@ const CustomComponent = ({ content }: { content: string }) => {
 const text = `
 # Main Heading(H1)
 
-![Alt Text](https://via.placeholder.com/150 "Image Title")
+![Alt](https://via.placeholder.com/150)
 
 ## Subheading(H2)
 
 ### Another Subheading(H3)
 
-*Regular* text is {{ text }} just written as plain text. You can add **bold** text, *italic* text, and even ***bold italic*** text.
+*Regular* text is <test text="hello" /> just written as plain text. You can add **bold** text, *italic* text, and even ***bold italic*** text.
 
 You can also create hyperlinks: [OpenAI](https://www.openai.com)
 
@@ -322,14 +322,17 @@ A table:
 export const DefaultMarkdown = () => <RandomTextSender 
     initialText={text} 
     windowSize={30} 
-    regexComponents={{
-        '/\\{\\{([^}]+)\\}\\}/': ({ content }: any) => {
-            console.log('content', content);
-            const match = content.match(/\{\{(.*?)\}\}/);
-            if (!match) return content;
-            const [_, text] = match;
+    customComponents={{
+        'test': ({ text, content }: any) => {
             return <CustomComponent content={text} />;
+        },
+        'ArticlePreview': ({ title, description }: any) => {
+            console.log('title', title);
+            return <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+            </div>;
         }
     }}
 />;
-export const DefaultCharMarkdown = () => <RandomTextSender initialText={text} windowSize={30} sep="char" regexComponents={{ '\\{\\{text\\}\\}': CustomComponent }}/>;
+export const DefaultCharMarkdown = () => <RandomTextSender initialText={text} windowSize={30} sep="char" customComponents={{ '\\{\\{text\\}\\}': CustomComponent }}/>;

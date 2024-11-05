@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/docco'
 import './animations.css';
@@ -16,7 +17,7 @@ interface SmoothTextProps {
     animationTimingFunction?: string;
     codeStyle?: any;
     htmlComponents?: any;
-    regexComponents?: any;
+    customComponents?: any;
 }
 
 interface AnimatedImageProps {
@@ -101,16 +102,20 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     animationTimingFunction = "ease-in-out",
     codeStyle=null,
     htmlComponents = {},
-    regexComponents = {},
+    customComponents = {},
 }) => {
-    // regexComponents = {...regexComponents, ...{
-    //     '/!\\[([^\\]]*)\\]\\(([^\\)]*)/': ({ content }: any) => {
-    //         return <span></span>;
-    //     },
-    //     // '/(?<!\\\\)\\*/': ({content}: any) => {
-    //     //     return <span></span>;
-    //     // },
-    // }};
+    customComponents = React.useMemo(() => {
+        return Object.entries(customComponents).reduce((acc, [pattern, component]) => {
+            if (!pattern.startsWith('/') && !pattern.endsWith('/')) {
+                // Convert simple component name to HTML-style tag pattern
+                const regexPattern = `/<${pattern}(?:\\s+[\\w-]+(?:=(?:"[^"]*"|{[^}]*}))?)*\\s*\\/\\>/`;
+                acc[regexPattern] = component;
+                delete acc[pattern];
+            }
+            return acc;
+        }, {} as typeof customComponents);
+    }, [customComponents]);
+    
     codeStyle = codeStyle || style.docco;
     const animationStyle: any
      = {
@@ -129,12 +134,12 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
             }, []);
         };
 
-        const fullPatterns = Object.keys(regexComponents).map(pattern => new RegExp(pattern.slice(1, -1)));
+        const fullPatterns = Object.keys(customComponents).map(pattern => new RegExp(pattern.slice(1, -1)));
         const partialPatterns: string[] = fullPatterns.flatMap(generatePartialPatterns)
             .sort((a, b) => b.length - a.length);
 
         return { fullPatterns, partialPatterns };
-    }, [regexComponents]);
+    }, [customComponents]);
 
     const processCustomComponents = React.useCallback((text: string): React.ReactNode[] => {
         const { fullPatterns, partialPatterns } = generatePatterns;
@@ -163,9 +168,39 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
             // Add the match itself - either as custom component or tokenized text
             const matchText = match[0];
             const matchPattern = fullPatterns.find(pattern => new RegExp(pattern).test(matchText));
-            if (matchPattern && regexComponents[matchPattern]) {
-                const CustomComponent = regexComponents[matchPattern];
-                parts.push(<TokenizedText
+            if (matchPattern && customComponents[matchPattern as unknown as string]) {
+                const CustomComponent = customComponents[matchPattern as unknown as string];
+
+                // Only extract props if it's an HTML-style component (starts with <)
+                if (matchText.startsWith('<')) {
+                    // Extract props from the matched text
+                    const propsMatch = matchText.match(/\s+([\w-]+)=(?:"([^"]*)"|{([^}]*)})/g);
+                    const props = propsMatch?.reduce((acc: any, prop: string) => {
+                        const [name, value] = prop.trim().split('=');
+                        // Handle both string values ("value") and JSX expressions ({value})
+                        if (value.startsWith('"') && value.endsWith('"')) {
+                            acc[name] = value.slice(1, -1); // Remove quotes
+                        } else if (value.startsWith('{') && value.endsWith('}')) {
+                            acc[name] = value.slice(1, -1); // Remove braces
+                        }
+                        return acc;
+                    }, {});
+
+                    parts.push(<TokenizedText
+                        input={<CustomComponent 
+                            key={match.index} 
+                            {...props}
+                            content={matchText} // Keep original content just in case
+                        />}
+                        sep={sep}
+                        animation={animation}
+                        animationDuration={animationDuration}
+                        animationTimingFunction={animationTimingFunction}
+                        animationIterationCount={1}
+                    />);
+                } else {
+                    // For non-HTML regex matches, just pass the content
+                    parts.push(<TokenizedText
                         input={<CustomComponent key={match.index} content={matchText} />}
                         sep={sep}
                         animation={animation}
@@ -173,6 +208,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                         animationTimingFunction={animationTimingFunction}
                         animationIterationCount={1}
                     />);
+                }
             }
             // Update the last index to be after the match
             lastIndex = match.index + match[0].length;
@@ -208,7 +244,6 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                 />);
             }
         }
-        console.log('parts', parts);
         return parts;
     }, [animation, animationDuration, animationTimingFunction, sep, generatePatterns]);
 
