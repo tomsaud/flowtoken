@@ -10,6 +10,7 @@ interface RandomTextSenderProps {
     animation?: string;  // Animation name
     sep?: string;  // Token separator
     customComponents: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
+    htmlComponents?: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
 }
 
 interface Controls {
@@ -104,7 +105,7 @@ const Controls = ({ controls, setControls }: { controls: Controls, setControls: 
     );
 }
 
-const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, customComponents, htmlComponents }) => {
+const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, customComponents, htmlComponents={} }) => {
     const [currentText, setCurrentText] = useState('');
     const [remainingTokens, setRemainingTokens] = useState<string[]>([]);
     const [baseLatency, setBaseLatency] = useState<number>(10);

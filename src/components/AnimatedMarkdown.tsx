@@ -94,6 +94,33 @@ const TokenizedText = ({ input, sep, animation, animationDuration, animationTimi
     );
 };
 
+export const customCodeRenderer = ({ animation, animationDuration, animationTimingFunction }: any) => {
+    return ({rows, stylesheet, useInlineStyles}: CustomRendererProps) => rows.map((node, i) => (
+        <div key={i} style={node.properties?.style || {}}>
+            {node.children.map((token: any, key: string) => {
+                // Extract and apply styles from the stylesheet if available and inline styles are used
+                const tokenStyles = useInlineStyles && stylesheet ? { ...stylesheet[token?.properties?.className[1]], ...token.properties?.style } : token.properties?.style || {};
+                return (
+                    <span key={key} style={tokenStyles}>
+                        {token.children && token.children[0].value.split(' ').map((word: string, index: number) => (
+                            <span key={index} style={{
+                                animationName: animation || '',
+                                animationDuration,
+                                animationTimingFunction,
+                                animationIterationCount: 1,
+                                whiteSpace: 'pre-wrap',
+                                display: 'inline-block',
+                            }}>
+                                {word + (index < token.children[0].value.split(' ').length - 1 ? ' ' : '')}
+                            </span>
+                        ))}
+                    </span>
+                );
+            })}
+        </div>
+    ));
+};
+
 const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     content,
     sep = "word",
@@ -108,7 +135,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
         return Object.entries(customComponents).reduce((acc, [pattern, component]) => {
             if (!pattern.startsWith('/') && !pattern.endsWith('/')) {
                 // Convert simple component name to HTML-style tag pattern
-                const regexPattern = `/<${pattern}(?:\\s+[\\w-]+(?:=(?:"[^"]*"|{[^}]*}))?)*\\s*\\/\\>/`;
+                const regexPattern = `/<${pattern}.*\\s*\\/\\>/`;
                 acc[regexPattern] = component;
                 delete acc[pattern];
             }
@@ -124,8 +151,8 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
 
     // Add this new memoized function
     const generatePatterns = React.useMemo(() => {
-        const generatePartialPatterns = (pattern: string): string[] => {
-            const components = splitRegexPattern(pattern);
+        const generatePartialPatterns = (pattern: RegExp ): string[] => {
+            const components = splitRegexPattern(pattern as unknown as string);
             return components.reduce((acc: string[], _, index) => {
                 if (index < components.length - 1) {
                     acc.push(components.slice(0, index + 1).join(''));
@@ -271,33 +298,6 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
         return processText(text);
     }, [animation, animationDuration, animationTimingFunction, sep]);
 
-    const customCodeRenderer: React.FC<CustomRendererProps> = ({ rows, stylesheet, useInlineStyles }) => {
-        return rows.map((node, i) => (
-            <div key={i} style={node.properties?.style || {}}>
-                {node.children.map((token: any, key: string) => {
-                    // Extract and apply styles from the stylesheet if available and inline styles are used
-                    const tokenStyles = useInlineStyles && stylesheet ? { ...stylesheet[token?.properties?.className[1]], ...token.properties?.style } : token.properties?.style || {};
-                    return (
-                        <span key={key} style={tokenStyles}>
-                            {token.children && token.children[0].value.split(' ').map((word: string, index: number) => (
-                                <span key={index} style={{
-                                    animationName: animation || '',
-                                    animationDuration,
-                                    animationTimingFunction,
-                                    animationIterationCount: 1,
-                                    whiteSpace: 'pre-wrap',
-                                    display: 'inline-block',
-                                }}>
-                                    {word + (index < token.children[0].value.split(' ').length - 1 ? ' ' : '')}
-                                </span>
-                            ))}
-                        </span>
-                    );
-                })}
-            </div>
-        ));
-    };
-
     // Memoize components object to avoid redefining components unnecessarily
     const components: any
      = React.useMemo(() => ({
@@ -332,7 +332,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                     onClick={handleCopy}
                     style={{ 
                         // Add your custom styles here
-                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
                         position: 'absolute',
                         top: '0.5rem',
                         right: '0.5rem',
@@ -341,22 +341,23 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                         cursor: 'pointer',
                         borderRadius: '0.5rem',
                         padding: '0.25rem 0.25rem',
+                        color: 'white',
                         // or any other CSS properties you want to modify
                     }}
                     aria-label={copied ? 'Copied!' : 'Copy code'}
                 >
                     {copied ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20 6L9 17l-5-5" />
                         </svg>
                     ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                     )}
                 </button>
-                <SyntaxHighlighter style={codeStyle} language={className?.substring(9).trim() || ''} renderer={customCodeRenderer}>
+                <SyntaxHighlighter style={codeStyle} language={className?.substring(9).trim() || ''} renderer={customCodeRenderer({ animation, animationDuration, animationTimingFunction })}>
                     {children}
                 </SyntaxHighlighter>
             </div>

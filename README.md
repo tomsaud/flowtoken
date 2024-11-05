@@ -95,6 +95,15 @@ export default function Chat() {
 }
 ```
 
+### Custom Components
+
+You can use custom components by passing a `customComponents` prop to the `AnimatedMarkdown` component where the key is the regex pattern (ex. `/\{\{.*?\}\}/`) or HTML tag (ex. `MyComponent`) to match and the value is the component to render. Then just prompt your LLM to output the custom component syntax and it will be rendered with your custom component.
+
+#### Example
+
+This is an example of a custom component. <ArticlePreview triggerText="Github" title="FlowToken" description="This is an example of a custom component." link="https://github.com/data-maki/flowtoken" />
+
+
 ### AnimatedMarkdown Props
 
 - **content**: The text to be displayed.
@@ -103,6 +112,8 @@ export default function Chat() {
 - **animationDuration**: CSS Duration of the animation. Ex. `0.6s`
 - **animationTimingFunction**: CSS Timing function of the animation. Ex. `ease`, `ease-in-out`, etc
 - **codeStyle**: The highlighter js style object to use.
+- **customComponents**: An object where the key is the regex pattern (ex. `/\{\{.*?\}\}/`) or HTML tag (ex. `MyComponent`) to match and the value is the react component to render.
+- **htmlComponents**: An object where the key is the HTML tag (ex. `code`, `h1`, `h2`, etc) to match and the value is the react component to render.
 
 ## Animations
 
