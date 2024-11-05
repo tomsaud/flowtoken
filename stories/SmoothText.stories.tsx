@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import SmoothText from '../components/SmoothText'; // Adjust the import path accordingly
+import SmoothText from '../src/components/SmoothText'; // Adjust the import path accordingly
 
 interface RandomTextSenderProps {
     initialText: string;

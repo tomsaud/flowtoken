@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import SmoothText from '../components/SmoothText'; // Adjust the import path accordingly
-import AnimatedMarkdown from '../components/AnimatedMarkdown';
+import SmoothText from '../src/components/SmoothText'; // Adjust the import path accordingly
+import AnimatedMarkdown from '../src/components/AnimatedMarkdown';
 import Markdown from 'react-markdown'
+import './tailwind.css';
 
 interface RandomTextSenderProps {
     initialText: string;
     windowSize: number;  // Propagate this to SmoothText for consistency
     animation?: string;  // Animation name
     sep?: string;  // Token separator
+    customComponents: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
+    htmlComponents?: { [key: string]: ({ content }: { content: string }) => React.ReactNode };
 }
 
 interface Controls {
@@ -102,7 +105,7 @@ const Controls = ({ controls, setControls }: { controls: Controls, setControls: 
     );
 }
 
-const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText }) => {
+const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText, customComponents, htmlComponents={} }) => {
     const [currentText, setCurrentText] = useState('');
     const [remainingTokens, setRemainingTokens] = useState<string[]>([]);
     const [baseLatency, setBaseLatency] = useState<number>(10);
@@ -114,7 +117,7 @@ const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText }) => {
         delayMultiplier: 1.4,
         animationDuration: 0.6,
         animationTimingFunction: "ease-in-out",
-        generationSpeed: 30,
+        generationSpeed: 3,
         simulateNetworkIssue: false
     });
     const [slowSection, setSlowSection] = useState<boolean>(false);
@@ -180,9 +183,9 @@ const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText }) => {
                     {slowSection && <p>Simulated Network Issue</p>}
                 </div>
             </div>
-            <div className="text-sm w-1/2" style={{ height: '3000px'}}>
+            <div className="text-sm w-1/2 prose lg:prose-md prose-pre:p-0 prose-pre:m-0 prose-pre:bg-transparent" style={{ height: '3000px'}}>
                 {currentText.length > 0 &&
-                    <AnimatedMarkdown content={currentText} animation={controls.animation === 'none' ? null : controls.animation} sep={controls.sep} animationDuration={animationDurationString} animationTimingFunction={controls.animationTimingFunction} />   
+                    <AnimatedMarkdown content={currentText} animation={controls.animation === 'none' ? null : controls.animation} sep={controls.sep} animationDuration={animationDurationString} animationTimingFunction={controls.animationTimingFunction} customComponents={customComponents} htmlComponents={htmlComponents}/>   
                 }
             </div>
         </div>
@@ -191,18 +194,66 @@ const RandomTextSender: React.FC<RandomTextSenderProps> = ({ initialText }) => {
 
 // This is the default export that defines the component title and other configuration
 export default {
-    title: 'Components/SmoothFadeInMarkdown',
+    title: 'Components/MarkdownCustomComponents',
     component: RandomTextSender,
+};
+
+const CustomComponent = ({ content }: { content: string }) => {
+    const removedBraces = content.replace(/{{|}}/g, '');
+    const timeoutRef = React.useRef<NodeJS.Timeout>();
+
+    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        const div = e.currentTarget;
+        div.classList.remove('invisible');
+        div.classList.add('visible');
+    };
+
+    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+        const div = e.currentTarget;
+        timeoutRef.current = setTimeout(() => {
+            div.classList.remove('visible');
+            div.classList.add('invisible');
+        }, 200); // 200ms delay before hiding
+    };
+
+    return (
+        <span 
+            className="text-red-500 bg-gray-100 p-1 rounded-md inline-block relative group cursor-help"
+            title={`Learn more about "${removedBraces}"`}
+        >
+            {removedBraces}
+            <div 
+                className="invisible group-hover:visible absolute z-10 w-64 p-2 mt-2 text-sm bg-white border rounded shadow-lg transition-all duration-200"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
+                <a 
+                    href={`https://en.wikipedia.org/wiki/${encodeURIComponent(removedBraces)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-blue-600 hover:underline"
+                >
+                    View on Wikipedia
+                </a>
+                <p className="mt-1 text-gray-600">Click to learn more about this term on Wikipedia</p>
+            </div>
+        </span>
+    );
 };
 
 const text = `
 # Main Heading(H1)
 
+![Alt](https://via.placeholder.com/150)
+
 ## Subheading(H2)
 
 ### Another Subheading(H3)
 
-Regular text is just written as plain text. You can add **bold** text, *italic* text, and even ***bold italic*** text.
+*Regular* text is <test text="hello" /> just written as plain text. You can add **bold** text, *italic* text, and even ***bold italic*** text.
 
 You can also create hyperlinks: [OpenAI](https://www.openai.com)
 
@@ -269,5 +320,20 @@ A table:
 `
 
 // Here we define a "story" for the default view of SmoothText
-export const Default = () => <RandomTextSender initialText={text} windowSize={30} />;
-export const DefaultChar = () => <RandomTextSender initialText={text} windowSize={30} sep="char" />;
+export const DefaultMarkdown = () => <RandomTextSender 
+    initialText={text} 
+    windowSize={30} 
+    customComponents={{
+        'test': ({ text, content }: any) => {
+            return <CustomComponent content={text} />;
+        },
+        'ArticlePreview': ({ title, description }: any) => {
+            console.log('title', title);
+            return <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+            </div>;
+        }
+    }}
+/>;
+export const DefaultCharMarkdown = () => <RandomTextSender initialText={text} windowSize={30} sep="char" customComponents={{ '\\{\\{text\\}\\}': CustomComponent }}/>;

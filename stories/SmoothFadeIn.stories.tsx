@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import SmoothText from '../components/SmoothText'; // Adjust the import path accordingly
-import StreamText from '../components/SmoothFadeText';
+import SmoothText from '../src/components/SmoothText'; // Adjust the import path accordingly
+import StreamText from '../src/components/SmoothFadeText';
 import Markdown from 'react-markdown'
 
 interface RandomTextSenderProps {
