@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import SmoothText from '../components/SmoothText'; // Adjust the import path accordingly
-import StreamingFadeInText from '../components/FadeIn';
+import SmoothText from '../src/components/SmoothText'; // Adjust the import path accordingly
+import StreamingFadeInText from '../src/components/FadeIn';
 
 interface RandomTextSenderProps {
     initialText: string;
