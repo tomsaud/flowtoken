@@ -179,6 +179,10 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
         let parts: React.ReactNode[] = [];
         let lastIndex = 0;
 
+        if (fullPatterns.length === 0) {
+            return [text];
+        }
+
         // Use matchAll to find each match and its position
         for (const match of remainingText.matchAll(regex)) {
             // Add the substring before the match
