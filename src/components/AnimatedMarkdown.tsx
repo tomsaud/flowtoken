@@ -168,6 +168,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     }, [customComponents]);
 
     const processCustomComponents = React.useCallback((text: string): React.ReactNode[] => {
+        if (text === '\n') return [];
         const { fullPatterns, partialPatterns } = generatePatterns;
 
         // Process the entire text as it ends with a complete pattern
