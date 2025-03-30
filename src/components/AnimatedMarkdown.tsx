@@ -95,30 +95,45 @@ const TokenizedText = ({ input, sep, animation, animationDuration, animationTimi
 };
 
 export const customCodeRenderer = ({ animation, animationDuration, animationTimingFunction }: any) => {
-    return ({rows, stylesheet, useInlineStyles}: CustomRendererProps) => rows.map((node, i) => (
-        <div key={i} style={node.properties?.style || {}}>
-            {node.children.map((token: any, key: string) => {
-                // Extract and apply styles from the stylesheet if available and inline styles are used
-                const tokenStyles = useInlineStyles && stylesheet ? { ...stylesheet[token?.properties?.className[1]], ...token.properties?.style } : token.properties?.style || {};
-                return (
-                    <span key={key} style={tokenStyles}>
-                        {token.children && token.children[0].value.split(' ').map((word: string, index: number) => (
-                            <span key={index} style={{
-                                animationName: animation || '',
-                                animationDuration,
-                                animationTimingFunction,
-                                animationIterationCount: 1,
-                                whiteSpace: 'pre-wrap',
-                                display: 'inline-block',
-                            }}>
-                                {word + (index < token.children[0].value.split(' ').length - 1 ? ' ' : '')}
-                            </span>
-                        ))}
-                    </span>
-                );
-            })}
-        </div>
-    ));
+    return ({ rows, stylesheet, useInlineStyles }: CustomRendererProps) =>
+        rows.map((node, i) => (
+            <div key={i} style={node.properties?.style || {}}>
+                {node.children.map((token: any, key: string) => {
+                    // Merge inline styles from the stylesheet if available
+                    const tokenStyles = useInlineStyles && stylesheet
+                        ? { ...stylesheet[token?.properties?.className[1]], ...token.properties?.style }
+                        : token.properties?.style || {};
+
+                    return (
+                        <span key={key} style={tokenStyles}>
+                            {token.children &&
+                            typeof token.children[0].value === 'string'
+                                ? token.children[0].value.split(' ').map((word: string, index: number) => (
+                                      <span
+                                          key={index}
+                                          style={{
+                                              animationName: animation || '',
+                                              animationDuration,
+                                              animationTimingFunction,
+                                              animationIterationCount: 1,
+                                              whiteSpace: 'pre-wrap',
+                                              display: 'inline-block',
+                                          }}
+                                      >
+                                          {word +
+                                              (index <
+                                              token.children[0].value.split(' ').length - 1
+                                                  ? ' '
+                                                  : '')}
+                                      </span>
+                                  ))
+                                : // If token.children[0].value is not a string, render as is.
+                                  token.children}
+                        </span>
+                    );
+                })}
+            </div>
+        ));
 };
 
 const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
