@@ -17,6 +17,7 @@ interface SmoothTextProps {
     codeStyle?: any;
     htmlComponents?: any;
     customComponents?: any;
+    renderComponents?: any;
     theme?: 'light' | 'dark';
 }
 
@@ -130,6 +131,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     codeStyle=null,
     htmlComponents = {},
     customComponents = {},
+    renderComponents = {},
     theme = 'light',
 }) => {
     customComponents = React.useMemo(() => {
@@ -389,7 +391,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                 'data-color-mode': theme
             }}
             remarkPlugins={[remarkGfm]}
-            components={components}
+            components={renderComponents}
         />
     );
 };
