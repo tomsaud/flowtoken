@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownPreview from '@uiw/react-markdown-preview';
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import style from 'react-syntax-highlighter/dist/esm/styles/hljs/docco'
@@ -17,6 +17,7 @@ interface SmoothTextProps {
     codeStyle?: any;
     htmlComponents?: any;
     customComponents?: any;
+    theme?: 'light' | 'dark';
 }
 
 interface AnimatedImageProps {
@@ -129,6 +130,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     codeStyle=null,
     htmlComponents = {},
     customComponents = {},
+    theme = 'light',
 }) => {
     customComponents = React.useMemo(() => {
         return Object.entries(customComponents).reduce((acc, [pattern, component]) => {
@@ -303,20 +305,19 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     }, [animation, animationDuration, animationTimingFunction, sep]);
 
     // Memoize components object to avoid redefining components unnecessarily
-    const components: any
-     = React.useMemo(() => ({
+    const components: any = React.useMemo(() => ({
         text: ({ node, ...props }: any) => animateText(props.children),
-         h1: ({ node, ...props }: any) => <h1 {...props}>{animateText(props.children)}</h1>,
-         h2: ({ node, ...props }: any) => <h2 {...props}>{animateText(props.children)}</h2>,
-         h3: ({ node, ...props }: any) => <h3 {...props}>{animateText(props.children)}</h3>,
-         h4: ({ node, ...props }: any) => <h4 {...props}>{animateText(props.children)}</h4>,
-         h5: ({ node, ...props }: any) => <h5 {...props}>{animateText(props.children)}</h5>,
-         h6: ({ node, ...props }: any) => <h6 {...props}>{animateText(props.children)}</h6>,
-         p: ({ node, ...props }: any) => <p {...props}>{animateText(props.children)}</p>,
-         li: ({ node, ...props }: any) => <li {...props} className="custom-li" style={animationStyle}>{animateText(props.children)}</li>,
-         a: ({ node, ...props }: any) => <a {...props} href={props.href} target="_blank" rel="noopener noreferrer">{animateText(props.children)}</a>,
-         strong: ({ node, ...props }: any) => <strong {...props}>{animateText(props.children)}</strong>,
-         em: ({ node, ...props }: any) => <em {...props}>{animateText(props.children)}</em>,
+        h1: ({ node, ...props }: any) => <h1 {...props}>{animateText(props.children)}</h1>,
+        h2: ({ node, ...props }: any) => <h2 {...props}>{animateText(props.children)}</h2>,
+        h3: ({ node, ...props }: any) => <h3 {...props}>{animateText(props.children)}</h3>,
+        h4: ({ node, ...props }: any) => <h4 {...props}>{animateText(props.children)}</h4>,
+        h5: ({ node, ...props }: any) => <h5 {...props}>{animateText(props.children)}</h5>,
+        h6: ({ node, ...props }: any) => <h6 {...props}>{animateText(props.children)}</h6>,
+        p: ({ node, ...props }: any) => <p {...props}>{animateText(props.children)}</p>,
+        li: ({ node, ...props }: any) => <li {...props} className="custom-li" style={animationStyle}>{animateText(props.children)}</li>,
+        a: ({ node, ...props }: any) => <a {...props} href={props.href} target="_blank" rel="noopener noreferrer">{animateText(props.children)}</a>,
+        strong: ({ node, ...props }: any) => <strong {...props}>{animateText(props.children)}</strong>,
+        em: ({ node, ...props }: any) => <em {...props}>{animateText(props.children)}</em>,
         code: ({ node, className, children, ...props }: any) => {
             const [copied, setCopied] = React.useState(false);
 
@@ -366,7 +367,7 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
                 </SyntaxHighlighter>
             </div>
         },
-         hr: ({ node, ...props }: any) => <hr {...props} style={{
+        hr: ({ node, ...props }: any) => <hr {...props} style={{
             animationName: animation,
             animationDuration,
             animationTimingFunction,
@@ -380,9 +381,17 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
         ...htmlComponents
     }), [animateText]);
 
-    return <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>
-        {content}
-        </ReactMarkdown>;
+    return (
+        <MarkdownPreview 
+            source={content}
+            className="wmde-markdown" 
+            wrapperElement={{
+                'data-color-mode': theme
+            }}
+            remarkPlugins={[remarkGfm]}
+            components={components}
+        />
+    );
 };
 
 export default MarkdownAnimateText;
