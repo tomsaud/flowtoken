@@ -10,6 +10,7 @@ interface SmoothTextProps {
     codeStyle?: any;
     htmlComponents?: any;
     customComponents?: any;
+    renderComponents?: any;
     theme?: 'light' | 'dark';
 }
 interface CustomRendererProps {
