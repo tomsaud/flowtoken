@@ -83,7 +83,7 @@ const customCodeRenderer = ({ animation, animationDuration, animationTimingFunct
     });
 };
 exports.customCodeRenderer = customCodeRenderer;
-const MarkdownAnimateText = ({ content, sep = "word", animation = "fadeIn", animationDuration = "1s", animationTimingFunction = "ease-in-out", codeStyle = null, htmlComponents = {}, customComponents = {}, renderComponents = {}, theme = 'light', }) => {
+const MarkdownAnimateText = ({ content, sep = "word", animation = "fadeIn", animationDuration = "1s", animationTimingFunction = "ease-in-out", codeStyle = null, htmlComponents = {}, customComponents = {}, theme = 'light', }) => {
     customComponents = react_1.default.useMemo(() => {
         return Object.entries(customComponents).reduce((acc, [pattern, component]) => {
             if (!pattern.startsWith('/') && !pattern.endsWith('/')) {
@@ -299,6 +299,6 @@ const MarkdownAnimateText = ({ content, sep = "word", animation = "fadeIn", anim
         } }, htmlComponents)), [animateText]);
     return (react_1.default.createElement(react_markdown_preview_1.default, { source: content, className: "wmde-markdown", wrapperElement: {
             'data-color-mode': theme
-        }, remarkPlugins: [remark_gfm_1.default], components: renderComponents }));
+        }, remarkPlugins: [remark_gfm_1.default], components: components }));
 };
 exports.default = MarkdownAnimateText;
