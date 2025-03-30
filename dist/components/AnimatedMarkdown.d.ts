@@ -12,11 +12,5 @@ interface SmoothTextProps {
     customComponents?: any;
     theme?: 'light' | 'dark';
 }
-interface CustomRendererProps {
-    rows: any[];
-    stylesheet: any;
-    useInlineStyles: boolean;
-}
-export declare const customCodeRenderer: ({ animation, animationDuration, animationTimingFunction }: any) => ({ rows, stylesheet, useInlineStyles }: CustomRendererProps) => React.JSX.Element[];
 declare const MarkdownAnimateText: React.FC<SmoothTextProps>;
 export default MarkdownAnimateText;

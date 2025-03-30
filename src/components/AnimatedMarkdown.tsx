@@ -94,56 +94,6 @@ const TokenizedText = ({ input, sep, animation, animationDuration, animationTimi
     );
 };
 
-export const customCodeRenderer = ({ animation, animationDuration, animationTimingFunction }: any) => {
-    return ({ rows, stylesheet, useInlineStyles }: CustomRendererProps) =>
-        rows.map((node, i) => (
-            <div key={i} style={node.properties?.style || {}}>
-                {node.children.map((token: any, key: string) => {
-                    const tokenStyles = useInlineStyles && stylesheet
-                        ? { ...stylesheet[token?.properties?.className?.[1]], ...token.properties?.style }
-                        : token.properties?.style || {};
-
-                    // Ensure token.children exists and token.children[0].value is a string and has a split method
-                    if (
-                        token.children &&
-                        token.children.length > 0 &&
-                        token.children[0].value &&
-                        typeof token.children[0].value === 'string' &&
-                        typeof token.children[0].value.split === 'function'
-                    ) {
-                        const splits = token.children[0].value.split(' ');
-                        return (
-                            <span key={key} style={tokenStyles}>
-                                {splits.map((word: string, index: number) => (
-                                    <span
-                                        key={index}
-                                        style={{
-                                            animationName: animation || '',
-                                            animationDuration,
-                                            animationTimingFunction,
-                                            animationIterationCount: 1,
-                                            whiteSpace: 'pre-wrap',
-                                            display: 'inline-block',
-                                        }}
-                                    >
-                                        {word + (index < splits.length - 1 ? ' ' : '')}
-                                    </span>
-                                ))}
-                            </span>
-                        );
-                    } else {
-                        // Fallback: render children directly if the expected structure isn't found
-                        return (
-                            <span key={key} style={tokenStyles}>
-                                {token.children}
-                            </span>
-                        );
-                    }
-                })}
-            </div>
-        ));
-};
-
 const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
     content,
     sep = "word",
@@ -341,55 +291,6 @@ const MarkdownAnimateText: React.FC<SmoothTextProps> = ({
         a: ({ node, ...props }: any) => <a {...props} href={props.href} target="_blank" rel="noopener noreferrer">{animateText(props.children)}</a>,
         strong: ({ node, ...props }: any) => <strong {...props}>{animateText(props.children)}</strong>,
         em: ({ node, ...props }: any) => <em {...props}>{animateText(props.children)}</em>,
-        code: ({ node, className, children, ...props }: any) => {
-            const [copied, setCopied] = React.useState(false);
-
-            const handleCopy = () => {
-                navigator.clipboard.writeText(children);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            };
-
-            if (!className || !className.startsWith("language-")) {
-                return <code {...props}>
-                    {animateText(children)}
-                </code>;
-            }
-            return <div {...props} style={animationStyle} className={`relative`}>
-                <button
-                    onClick={handleCopy}
-                    style={{ 
-                        // Add your custom styles here
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                        position: 'absolute',
-                        top: '0.5rem',
-                        right: '0.5rem',
-                        zIndex: 10,
-                        opacity: 0.7,
-                        cursor: 'pointer',
-                        borderRadius: '0.5rem',
-                        padding: '0.25rem 0.25rem',
-                        color: 'white',
-                        // or any other CSS properties you want to modify
-                    }}
-                    aria-label={copied ? 'Copied!' : 'Copy code'}
-                >
-                    {copied ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
-                    )}
-                </button>
-                <SyntaxHighlighter style={codeStyle} language={className?.substring(9).trim() || ''} renderer={customCodeRenderer({ animation, animationDuration, animationTimingFunction })}>
-                    {children}
-                </SyntaxHighlighter>
-            </div>
-        },
         hr: ({ node, ...props }: any) => <hr {...props} style={{
             animationName: animation,
             animationDuration,
