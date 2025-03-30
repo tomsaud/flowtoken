@@ -68,26 +68,29 @@ const customCodeRenderer = ({ animation, animationDuration, animationTimingFunct
     return ({ rows, stylesheet, useInlineStyles }) => rows.map((node, i) => {
         var _a;
         return (react_1.default.createElement("div", { key: i, style: ((_a = node.properties) === null || _a === void 0 ? void 0 : _a.style) || {} }, node.children.map((token, key) => {
-            var _a, _b, _c;
-            // Merge inline styles from the stylesheet if available
+            var _a, _b, _c, _d;
             const tokenStyles = useInlineStyles && stylesheet
-                ? Object.assign(Object.assign({}, stylesheet[(_a = token === null || token === void 0 ? void 0 : token.properties) === null || _a === void 0 ? void 0 : _a.className[1]]), (_b = token.properties) === null || _b === void 0 ? void 0 : _b.style) : ((_c = token.properties) === null || _c === void 0 ? void 0 : _c.style) || {};
-            return (react_1.default.createElement("span", { key: key, style: tokenStyles }, token.children &&
-                typeof token.children[0].value === 'string'
-                ? token.children[0].value.split(' ').map((word, index) => (react_1.default.createElement("span", { key: index, style: {
+                ? Object.assign(Object.assign({}, stylesheet[(_b = (_a = token === null || token === void 0 ? void 0 : token.properties) === null || _a === void 0 ? void 0 : _a.className) === null || _b === void 0 ? void 0 : _b[1]]), (_c = token.properties) === null || _c === void 0 ? void 0 : _c.style) : ((_d = token.properties) === null || _d === void 0 ? void 0 : _d.style) || {};
+            // Ensure token.children exists and token.children[0].value is a string and has a split method
+            if (token.children &&
+                token.children.length > 0 &&
+                token.children[0].value &&
+                typeof token.children[0].value === 'string' &&
+                typeof token.children[0].value.split === 'function') {
+                const splits = token.children[0].value.split(' ');
+                return (react_1.default.createElement("span", { key: key, style: tokenStyles }, splits.map((word, index) => (react_1.default.createElement("span", { key: index, style: {
                         animationName: animation || '',
                         animationDuration,
                         animationTimingFunction,
                         animationIterationCount: 1,
                         whiteSpace: 'pre-wrap',
                         display: 'inline-block',
-                    } }, word +
-                    (index <
-                        token.children[0].value.split(' ').length - 1
-                        ? ' '
-                        : ''))))
-                : // If token.children[0].value is not a string, render as is.
-                    token.children));
+                    } }, word + (index < splits.length - 1 ? ' ' : ''))))));
+            }
+            else {
+                // Fallback: render children directly if the expected structure isn't found
+                return (react_1.default.createElement("span", { key: key, style: tokenStyles }, token.children));
+            }
         })));
     });
 };

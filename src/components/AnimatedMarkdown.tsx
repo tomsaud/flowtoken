@@ -99,38 +99,46 @@ export const customCodeRenderer = ({ animation, animationDuration, animationTimi
         rows.map((node, i) => (
             <div key={i} style={node.properties?.style || {}}>
                 {node.children.map((token: any, key: string) => {
-                    // Merge inline styles from the stylesheet if available
                     const tokenStyles = useInlineStyles && stylesheet
-                        ? { ...stylesheet[token?.properties?.className[1]], ...token.properties?.style }
+                        ? { ...stylesheet[token?.properties?.className?.[1]], ...token.properties?.style }
                         : token.properties?.style || {};
 
-                    return (
-                        <span key={key} style={tokenStyles}>
-                            {token.children &&
-                            typeof token.children[0].value === 'string'
-                                ? token.children[0].value.split(' ').map((word: string, index: number) => (
-                                      <span
-                                          key={index}
-                                          style={{
-                                              animationName: animation || '',
-                                              animationDuration,
-                                              animationTimingFunction,
-                                              animationIterationCount: 1,
-                                              whiteSpace: 'pre-wrap',
-                                              display: 'inline-block',
-                                          }}
-                                      >
-                                          {word +
-                                              (index <
-                                              token.children[0].value.split(' ').length - 1
-                                                  ? ' '
-                                                  : '')}
-                                      </span>
-                                  ))
-                                : // If token.children[0].value is not a string, render as is.
-                                  token.children}
-                        </span>
-                    );
+                    // Ensure token.children exists and token.children[0].value is a string and has a split method
+                    if (
+                        token.children &&
+                        token.children.length > 0 &&
+                        token.children[0].value &&
+                        typeof token.children[0].value === 'string' &&
+                        typeof token.children[0].value.split === 'function'
+                    ) {
+                        const splits = token.children[0].value.split(' ');
+                        return (
+                            <span key={key} style={tokenStyles}>
+                                {splits.map((word: string, index: number) => (
+                                    <span
+                                        key={index}
+                                        style={{
+                                            animationName: animation || '',
+                                            animationDuration,
+                                            animationTimingFunction,
+                                            animationIterationCount: 1,
+                                            whiteSpace: 'pre-wrap',
+                                            display: 'inline-block',
+                                        }}
+                                    >
+                                        {word + (index < splits.length - 1 ? ' ' : '')}
+                                    </span>
+                                ))}
+                            </span>
+                        );
+                    } else {
+                        // Fallback: render children directly if the expected structure isn't found
+                        return (
+                            <span key={key} style={tokenStyles}>
+                                {token.children}
+                            </span>
+                        );
+                    }
                 })}
             </div>
         ));
