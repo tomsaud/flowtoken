@@ -69,16 +69,25 @@ const customCodeRenderer = ({ animation, animationDuration, animationTimingFunct
         var _a;
         return (react_1.default.createElement("div", { key: i, style: ((_a = node.properties) === null || _a === void 0 ? void 0 : _a.style) || {} }, node.children.map((token, key) => {
             var _a, _b, _c;
-            // Extract and apply styles from the stylesheet if available and inline styles are used
-            const tokenStyles = useInlineStyles && stylesheet ? Object.assign(Object.assign({}, stylesheet[(_a = token === null || token === void 0 ? void 0 : token.properties) === null || _a === void 0 ? void 0 : _a.className[1]]), (_b = token.properties) === null || _b === void 0 ? void 0 : _b.style) : ((_c = token.properties) === null || _c === void 0 ? void 0 : _c.style) || {};
-            return (react_1.default.createElement("span", { key: key, style: tokenStyles }, token.children && token.children[0].value.split(' ').map((word, index) => (react_1.default.createElement("span", { key: index, style: {
-                    animationName: animation || '',
-                    animationDuration,
-                    animationTimingFunction,
-                    animationIterationCount: 1,
-                    whiteSpace: 'pre-wrap',
-                    display: 'inline-block',
-                } }, word + (index < token.children[0].value.split(' ').length - 1 ? ' ' : ''))))));
+            // Merge inline styles from the stylesheet if available
+            const tokenStyles = useInlineStyles && stylesheet
+                ? Object.assign(Object.assign({}, stylesheet[(_a = token === null || token === void 0 ? void 0 : token.properties) === null || _a === void 0 ? void 0 : _a.className[1]]), (_b = token.properties) === null || _b === void 0 ? void 0 : _b.style) : ((_c = token.properties) === null || _c === void 0 ? void 0 : _c.style) || {};
+            return (react_1.default.createElement("span", { key: key, style: tokenStyles }, token.children &&
+                typeof token.children[0].value === 'string'
+                ? token.children[0].value.split(' ').map((word, index) => (react_1.default.createElement("span", { key: index, style: {
+                        animationName: animation || '',
+                        animationDuration,
+                        animationTimingFunction,
+                        animationIterationCount: 1,
+                        whiteSpace: 'pre-wrap',
+                        display: 'inline-block',
+                    } }, word +
+                    (index <
+                        token.children[0].value.split(' ').length - 1
+                        ? ' '
+                        : ''))))
+                : // If token.children[0].value is not a string, render as is.
+                    token.children));
         })));
     });
 };
